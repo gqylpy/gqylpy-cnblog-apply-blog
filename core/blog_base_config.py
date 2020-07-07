@@ -1,0 +1,69 @@
+import requests
+
+from .shared import gen_headers
+from .shared import record_fail_reason
+
+# 设置默认编辑器需要的数据
+_data = {
+    '__VIEWSTATE': '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',
+    '__VIEWSTATEGENERATOR': '753736AA',
+    '__SCROLLPOSITIONX': '0',
+    '__SCROLLPOSITIONY': '520',
+    '__EVENTTARGET': '',
+    '__EVENTARGUMENT': '',
+    'Edit$ddlItemCount': '10',
+    'Edit$ddlPageSize': '10',
+    'Edit$ddlCategoryItemCount': '15',
+    'Edit$ddlRecentCommentCount': '5',
+    'Edit$ddlTopViewItemCount': '5',
+    'Edit$ddlTopCommentItemCount': '5',
+    'Edit$EnableComments': 'on',
+    'Edit$chkOnlyTitle': 'on',
+    'Edit$chkIsArticleOnHome': 'on',
+    'Edit$rblEditor': '5',
+    'Edit$cklSkinControl$15': '18',
+    'Edit$cklSkinControl$11': '14',
+    'Edit$cklSkinControl$16': '20',
+    'Edit$cklSkinControl$12': '15',
+    'Edit$lkbUpdate': 'Save'
+}
+
+
+def _gen_data(blog_path: str):
+    """设置博客路径需要的数据"""
+    return {
+        '__VIEWSTATE': 'zp8dCtijx3TLELuv6gg3LbBfce6e/4tjjJkixFYB4bvkG2tc3zK+dtGJdFKahcfP+8e+g7dvrl7hUd3Fs2auAedgEGHblozSQ9l0M/hYcru3Q2s6gCjF7wlWUmrp/WUXQ5Lkzit5JhkzSXfGZrzzktdo4mzIFzWPPneYO7fZ/xO971Yp0MnLxKVzJSS677SY2ZRwjD9kaBJ/MlRy0ffl5h/1XQnuCDSw/AAqcsm3SOBi3MNptCckmiKpAvFC32xD3WAOyggR2K7WrwTJMBj7DMIZxfD7iZfq4O1NrO2D+fT9fJFcFTs47PPJ44ViDX+4LjueQHbJK1KH4lAPLfTlnyx7wkNm5w+udrt/zb8YWbVoxJamLF4o0KBQDqizX2SqZVfKs5YIVBjJEnYKU/JggfaE77dgPlb9X+aebW9DEkNMkQuXkRaVbmyCbgJhL3Rj5qsjSSbDUux9ssi731GSHzcf8HACbehSWuGtmU3Blwkonlyo7So88GqAgEoplDFYSoJfUaY0DAXR5Hngnk1mvJqnpXEWQnWDsRDzd6dIx+KrLpZJpDBzvhlJ4Rv07jgxNO5qbUiNPvvengvCIuVGnmfZtetEloUH18e5eyZvHrydPIlZxeYWgJHzwf05Wx2EZd15yksNSvoluWVuStotzDDv/Ei0NodvDAdamqThJxiYwBjQXUgEH26aL68ZJd+uPbCGDjKr6zBvCZbXPdvn5zzkVZBcPK/29bGWHu29fTAznkNwA+vMUB2L7h+kgiZuGmgQ+WyZpvhZOsAGpBGfN9ud+VCaQUSxjDQ9+BD8brGYzVLgCB/toZxr/lm405kW7lG8DXk4z6rJEkS/Qjp6aDmWZaxS80tpkXdH7Vta74NZN5WHrT0wOZnhG7pR38J3VCQZrcMRK5X0fFN+f/AiLRRXoqwGcg1PR+5lq/InwDaJbBmv5CA5JNkQWQFlNt0UXnKIHaGwrgre4wDfEO3Lk8JPsGPd0ZramTlIaYIv29ObqINWk+jTfZwdiOxRsJ7cOQYX6FgPLCLQpGCiiDeAusczmLnbs45FFRJWy1QjCbqnQlvXuUFKtYeFCeC3URH/vbEp8Mke28c1O30T9smQnLVeDZdR2Hf1MgTgvBAkr1YBcVSSvML3iJLr8Tzblq/kNio1o+JZ7WT5PZQJNg00pjk/eQVkpKZz/RPpFlq3ENZxv2tD8krX90A25dJHFBrmEZX3SrzWJa9uJ5w7bfSRkm0/dht/wAuA6NDVflrkWSXlRih3IZVaO81WGXu4MGVy/xF/Sbs4rbKdpyW8ptUWD5AUvYY0tXZ/yVTavpekenVMFApM/fPCzuHpK+lOsMnJ1rVHWOkOUyBo39xWckcevBcYCg6w5qj3fK4zkuES5my0BmglZFO6GvsNQRv3ymZxrO2o1kxqBuqMDt0oIAskzA99f4SqeDn6W7qZGzuCXSteOF1+7WFW44SBNzDaniK3YdP8M9SqkPIK0GEbiauEfgOFGjZVNluaZe0rlfp0+HmthUCGOVCWnW+Z3K7AdGZTYr7HUPUTr5a+VMqK2lkmE0+zPKzTlsYf6euLv0uLERDxSt0I1f2GSeyPx138ip8XRjEF5UF3XzuWBCY2PE2tJa/M78Jgzn1pneFDq0VLFAa79mGuXilihWYqYP15XwBn7/KWYiRUeYn/uBhdzhatH54QV1pcY7VJ9/BH7IswjmaEKePaiCrAAznT3T0nzL+zeC9/ghihheJWW9SZ5OESLn464m7u9aAFOqiJsGSyMUUesTlGtiEO4Td39N1Ugt8kerh41+lsi7jV+jB/fPGCmP5rCNhtegokxhLx8CWW1sbgikwTh2NOnkP6wYpUlBNtrG8ptyN7iY+qhpsGxL6zg2BK8rRWHXqrAlpR0+/e8r/PcHOVyczf5DYZNeVN9oITo/3yRkrViLb4qRAXrj6lH2dEfewH8u+aetI4DQFWJUolxmOLKUqX6TEVJMNFS9w92/zr1uENSfCISRZSKTkCrjq84h1KupKJdzqct+NftyObPbXLENlfT/eBN1+Hx/VZYpJdlJufN3Nk0WQQWl0kHAxvhzHklze7RkfZisEvbfdSL+AzP+z7d9NH+pSR15Fh1IcXH+4wkzHUAxV5IWd1+XIu7NPTTlaRt5pm0z7R99EJDHz5/okZZckIE5fcDogJDpr/+ApnbdUQyXXFd5A9OR964tsOXVdZ7514iFAx+Jq4Oem83Jd7mOyPOYlQJrmulsqQbT7uCsWaUz29u17os7CVCdPFn8b9F9JIBUo2KCb3dsYD8gUa3Kh/l+DhTZwngyfJQGi15o/W3usSEf7LmZxqiFDyYEW6E1gkJd23l+BKwnjhADOfwZImwUaRH9bFMvtJFLovbFVfz4ajYOwT34/TgzjuTQ578zGm3JtRBxVyk9sE3jSFfIRZEuwKGcpuRkKOsBRDeu3tAS7130J7TQLqb3fpwok9bQnKluQRhLDGxLf9v9JSVcpz1v8bqFuJtw+pXSOvsnqswm225TyO07YLQQObs5clX6h4VQgXyNLtb/hhb+PHj1MzAISYLQ3L3i6BJ67d4jmq0pJ54lXVSep7OTzJcZJzA188QusaYu/oEWBsTen/aj81q6IsDOrvKaW6OUvEsj3ba5RnrYuQp6qJOHZabtzJZtoheQeUhNxoxGVyjS2qHKx782qpDyWTd9D0Ksu7EfqybkwZXwdZAYfJa/wQsDsu412MOBw3LgHj014DgucnZB1xs1W6U6q7Wxju1eaBxt2H60XDtbUe75LXGJGRM/mA6mJqt6pcLvy7YFcUY8hBTc5vw/njJ/OY9rs691j7uUbSZV3Rv6Vr3sC07RPQzKEL+ThF14y5k6FW+x01F8ddOIhPl+D4QhhBiweY3IdwOv4Jbpv2ewx2yoSMHWS38EmZF8O283LZvdQU6sqyrRbpXCnqnfvnqD2iG3fYjY2bXCsq7GdYzEr58wH20HUvs3FVpAWApqyf8LoeoFnaoKiz20HXWv6xRh/O/Rn2ns4wYevcL1qEhXCWiZjsZVmTu3FzjlPMtaHbuAZlMZ+TAzfiPJ15K1mM0ecECJpGKBg5Kx/i5Oy40rvrloJp6cVxEGlpbzOvcMIUmjzgA3qvnHp4V7WLFqGLSzsQY0zXASA/ngYmWD6hB6EWjZYo5OuNFYwxy+wwpLfit8MwUfGTt68Vz7+bMGg8B6yi50OmXFHmrArnGcoU+3b5ocP8RYQOeRJFdYZKBthwVGUYErfAVwE0PNxOtvogOueHAlpiJZBCW/NNpDFrXATyucVSivksBfl2zO4qcfOCSaHet9Q5GM7uFZ6B5qOw9WH4bc9jESNZ6uk4lCU5xI/eBPw9yY3WlL0+zw45i0bsKObNL2lai9WE+9gIs1e9mehgFfLbj8U7wUEQcXrl0FKAYWS8Q64uBvyWQ+cZtmyXZZGEapmjbWSrueDzc9FrqIctDksNBDqNuxP9BQHpPfP1m43qjh/NbYSAnM4w4X9gaswpQ6HqbipGVKI4ZZOKuip/iGLF0UxKUrc+M+Uj/NFL5Et0qImp6ecDGFuq6qYUAXbxkXu05A/sEdMCee3Bioe0ROKJPIjCbQR5UV3B/Sw+6+Ssb1a6KwfXUOMX8TPB+YrL1kz+XTWxX6Iy1DcHrSP5bT888ni4OFJmwBRLIf50XRhtO8F/68lAg6Z6MlffpKRQSYVHd4rdMah1HB0as/H1SWICgtrFSdAgUY11krNSwR/xSwgt7v9keF+BB+mvtNJuQKX4osbjJMHLXf+o72rn+YuiMl/ONvoNo4UYDnCEg/QpmYRfP3iblrlzPketO1z7B+/QEqm3r+Zkwu6JEZUtyWbZ5xLQwDbceSuMybJu5wdP5p72VlnWM3ORbxjEj7y2nEP/SzJ/7aINYKTZCpRPTKUmWOM+cDZI5YRiXeKd+kzdfSLMFtw92mZla3fNCOed6QvC9S8MWjBAtlhQiHh/GqDGpkhZ7HWcFj3TOxTgXTCsawES1bEhJXfuaZ9yR+pAV//aqni+eRMQfLVxgVMIs35Fy8hPmi0XuKBcOu6RLDGZmd0=',
+        '__VIEWSTATEGENERATOR': 'DE6EB275',
+        'ctl00$holderLeft$txt_BlogApp': blog_path,  # Blog path
+        'ctl00$holderLeft$ddlSkin': 'CodingLife',  # 皮肤
+        'ctl00$holderLeft$btn_submit': '注册'
+    }
+
+
+def set_blog_path(cookies: str, blog_path: str):
+    """设置博客路径"""
+    response = requests.post(
+        'https://b.cnblogs.com/BlogRegister.aspx',
+        headers=gen_headers(cookies), data=_gen_data(blog_path)
+    )
+
+    if '博客注册成功' in response.text:
+        return f'https://www.cnblogs.com/{blog_path}/'
+
+    if '该Blog地址已经被其他用户使用' in response.text:
+        return set_blog_path(cookies, blog_path + '_')
+
+    record_fail_reason(response.text)
+    return False
+
+
+def set_default_editor(cookies):
+    response = requests.post(
+        'https://i.cnblogs.com/Preferences.aspx',
+        headers=gen_headers(cookies), data=_data
+    )
+    if '保存成功!' in response.text:
+        return True
+
+    record_fail_reason(response.text)
+    return False
